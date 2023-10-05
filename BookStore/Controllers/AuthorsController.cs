@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using BookStoreWebApi.Models;
+using System.Diagnostics;
 
 namespace BookStoreWebApi.Controllers
 {
@@ -81,14 +82,22 @@ namespace BookStoreWebApi.Controllers
         [HttpPost]
         public async Task<ActionResult<Author>> PostAuthor(Author author)
         {
-          if (_context.Authors == null)
-          {
-              return Problem("Entity set 'BookStoresDbContext.Authors'  is null.");
-          }
-            _context.Authors.Add(author);
-            await _context.SaveChangesAsync();
+            try
+            {
+                if (_context.Authors == null)
+                {
+                    return Problem("Entity set 'BookStoresDbContext.Authors'  is null.");
+                }
+                _context.Authors.Add(author);
+                await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetAuthor", new { id = author.AuthorId }, author);
+                return CreatedAtAction("GetAuthor", new { id = author.AuthorId }, author);
+            }
+            catch (Exception e)
+            {
+                Debugger.Break();
+                throw;
+            }
         }
 
         // DELETE: api/Authors/5

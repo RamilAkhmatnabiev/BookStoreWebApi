@@ -24,10 +24,11 @@ namespace BookStoreWebApi.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Publisher>>> GetPublishers()
         {
-          if (_context.Publishers == null)
-          {
-              return NotFound();
-          }
+            if (_context.Publishers == null)
+            {
+                return NotFound();
+            }
+
             return await _context.Publishers.ToListAsync();
         }
 
@@ -35,16 +36,77 @@ namespace BookStoreWebApi.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<Publisher>> GetPublisher(int id)
         {
-          if (_context.Publishers == null)
-          {
-              return NotFound();
-          }
+            if (_context.Publishers == null)
+            {
+                return NotFound();
+            }
+
             var publisher = await _context.Publishers.FindAsync(id);
 
             if (publisher == null)
             {
                 return NotFound();
             }
+
+            return publisher;
+        }
+
+        // GET: api/Publishers/GetPublisherWithDetails/5
+        [HttpGet("GetPublisherWithDetails/{id}")]
+        public async Task<ActionResult<Publisher>> GetPublisherWithDetails(int id)
+        {
+            if (_context.Publishers == null)
+            {
+                return NotFound();
+            }
+
+            //EXAMPLE OF EAGLE LODING
+            var publisher = _context.Publishers
+                .Include(x => x.Users)
+                .ThenInclude(x => x.Role)
+                .Include(x => x.Books)
+                .ThenInclude(x => x.Sales)
+                .FirstOrDefault(x => x.PubId == id);
+
+            if (publisher == null)
+            {
+                return NotFound();
+            }
+
+            return publisher;
+        }
+
+        // GET: api/Publishers/GetPublisherWithDetailsExplicit/5
+        [HttpGet("GetPublisherWithDetailsExplicit/{id}")]
+        public async Task<ActionResult<Publisher>> GetPublisherWithDetailsExplicit(int id)
+        {
+            if (_context.Publishers == null)
+            {
+                return NotFound();
+            }
+
+            var publisher = await _context.Publishers.SingleAsync(x => x.PubId == id);
+
+            if (publisher == null)
+            {
+                return NotFound();
+            }
+            
+            //Before this string the publisher does not contain the Users and Book collection, cause his come in 'Lazy' mode
+
+            //Include the users collection
+            await _context.Entry(publisher)
+                .Collection(x => x.Users)
+                .Query()
+                .LoadAsync();
+
+            //Include the book => sales => store
+            await _context.Entry(publisher)
+                .Collection(x => x.Books)
+                .Query()
+                .Include(x => x.Sales)
+                .ThenInclude(x => x.Store)
+                .LoadAsync();
 
             return publisher;
         }
@@ -85,10 +147,11 @@ namespace BookStoreWebApi.Controllers
         [HttpPost]
         public async Task<ActionResult<Publisher>> PostPublisher(Publisher publisher)
         {
-          if (_context.Publishers == null)
-          {
-              return Problem("Entity set 'BookStoresDbContext.Publishers'  is null.");
-          }
+            if (_context.Publishers == null)
+            {
+                return Problem("Entity set 'BookStoresDbContext.Publishers'  is null.");
+            }
+
             _context.Publishers.Add(publisher);
             await _context.SaveChangesAsync();
 
@@ -103,6 +166,7 @@ namespace BookStoreWebApi.Controllers
             {
                 return NotFound();
             }
+
             var publisher = await _context.Publishers.FindAsync(id);
             if (publisher == null)
             {
