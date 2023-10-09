@@ -11,7 +11,7 @@ public partial class User
 
     public string Password { get; set; } = null!;
 
-    public string Source { get; set; } = null!;
+    public string? Source { get; set; }
 
     public string? FirstName { get; set; }
 
@@ -25,9 +25,9 @@ public partial class User
 
     public DateTime? HireDate { get; set; }
 
-    public virtual Publisher Pub { get; set; } = null!;
+    public virtual Publisher? Pub { get; set; }
 
     public virtual ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
 
-    public virtual Role Role { get; set; } = null!;
+    public virtual Role? Role { get; set; }
 }
